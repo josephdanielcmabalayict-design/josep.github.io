@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillBridge – Home | BatStateU CICS</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+body{display:flex;flex-direction:column;min-height:100vh}
+
+.role-grid-home{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;
+  max-width:720px;margin:0 auto;width:100%;
+}
+.role-card-home{
+  background:var(--surface);border:2px solid var(--border);border-radius:22px;
+  padding:50px 40px;cursor:pointer;transition:all .28s;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;
+  text-decoration:none;color:inherit;
+}
+.role-card-home:hover{border-color:var(--primary);transform:translateY(-6px);box-shadow:0 16px 44px rgba(26,86,219,.14)}
+.role-icon-home{width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2rem}
+.ri-blue{background:var(--primary-light)} .ri-sky{background:#E0F2FE}
+.role-name{font-family:'Syne',sans-serif;font-weight:700;font-size:2}
+.role-desc{font-size:5;color:var(--muted);line-height:1.65;font-weight:300}
+.role-cta{color:var(--primary);font-size:.2;font-weight:600;margin-top:4px}
+
+/* Quick stats bar */
+.stats-strip{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:36px;width:100%;max-width:720px;
+}
+.stat-chip{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+  padding:12px 20px;text-align:center;
+}
+.stat-chip .sv{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;color:var(--primary)}
+.stat-chip .sl{font-size:2;color:var(--muted);margin-top:2px}
+
+.welcome-name{color:var(--primary);font-weight:700}
+
+@media(max-width:600px){.role-grid-home{grid-template-columns:1fr}.stats-strip{flex-direction:column;align-items:center}}
+</style>
+
+</head>
+<body>
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <a class="nav-logo" href="home.html">Skill<span>Bridge</span></a>
+    <span class="nav-badge">CICS · BatStateU</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-email"></span>
+    <div class="notif-wrap">
+      <div class="notif-bell" onclick="toggleNotif('home-notif')" title="Notifications">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="notif-dropdown" id="home-notif">
+        <div class="notif-header"><strong>🔔 Notifications</strong>
+          <span class="notif-clear" onclick="clearNotifs('home-notif-list','home-notif')">Clear all</span></div>
+        <div class="notif-list" id="home-notif-list"><div class="notif-empty">No notifications yet.</div></div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Welcome back, <span class="welcome-name" id="welcome-name"></span> 👋</div>
+    <div class="page-sub">How would you like to participate today?</div>
+  </div>
+
+  <!-- Stats Strip -->
+  <div class="stats-strip">
+    <div class="stat-chip"><div class="sv">120+</div><div class="sl">Active Tutors</div></div>
+    <div class="stat-chip"><div class="sv">4.8 ⭐</div><div class="sl">Avg. Rating</div></div>
+    <div class="stat-chip"><div class="sv">350+</div><div class="sl">Sessions Done</div></div>
+    <div class="stat-chip"><div class="sv">CICS Only</div><div class="sl">Exclusive Platform</div></div>
+  </div>
+
+  <!-- Role Cards -->
+  <div class="role-grid-home">
+    <a class="role-card-home" href="tutor.html">
+      <div class="role-icon-home ri-blue">🎓</div>
+      <div class="role-name">Be a Peer Tutor</div>
+      <div class="role-desc">Help fellow CICS students understand tough BSCS/BSIT topics.</div>
+      <div class="role-cta">Start tutoring now→</div>
+    </a>
+    <a class="role-card-home" href="find-tutor.html">
+      <div class="role-icon-home ri-sky">🔍</div>
+      <div class="role-name">Find a Tutor</div>
+      <div class="role-desc">Get matched with the best CICS peer tutor for your specific course and year level needs.</div>
+      <div class="role-cta">Find a tutor →</div>
+    </a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="shared.js"></script>
+<script>
+const email = requireAuth();
+if (email) {
+  document.getElementById('nav-email').textContent = email;
+  const first = email.split('@')[0].replace(/[._]/g, ' ');
+  document.getElementById('welcome-name').textContent = first.charAt(0).toUpperCase() + first.slice(1);
+}
+</script>
+</body>
+</html>

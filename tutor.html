@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillBridge – Be a Peer Tutor | BatStateU CICS</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+body{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── VIEWS ── */
+.view{display:none}
+.view.active{display:block}
+
+/* ── DASHBOARD ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:24px;width:100%}
+.stat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:18px;text-align:center}
+.stat-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.9rem;color:var(--primary)}
+.stat-lbl{font-size:.7rem;color:var(--muted);margin-top:3px}
+.sec-heading{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:12px;text-align:center}
+.session-list{display:flex;flex-direction:column;gap:11px;width:100%}
+.session-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.session-info h3{font-weight:600;font-size:.92rem}
+.session-info p{font-size:.78rem;color:var(--muted);margin-top:3px}
+.badge{border-radius:20px;padding:4px 13px;font-size:.7rem;font-weight:600}
+.badge-pending{background:#FEF3C7;color:#92400E}
+.badge-confirmed{background:#D1FAE5;color:#065F46}
+.sa{display:flex;gap:7px}
+.btn-sm{border-radius:8px;padding:6px 13px;font-size:.76rem;font-weight:600;cursor:pointer;border:1.5px solid;font-family:'DM Sans',sans-serif;transition:all .15s}
+.btn-acc{background:var(--success);color:#fff;border-color:var(--success)}
+.btn-dec{background:transparent;color:var(--muted);border-color:var(--border)}
+.btn-dec:hover{border-color:var(--danger);color:var(--danger)}
+
+/* ── BACK BUTTON ── */
+.btn-back{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:13px 34px;font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;cursor:pointer;display:left;align-items:center;gap:9px;transition:all .2s;box-shadow:0 4px 16px rgba(26,86,219,.26);margin:0 auto;text-decoration:none}
+.btn-back:hover{background:var(--primary-dark);box-shadow:0 6px 22px rgba(26,86,219,.36)}
+.btn-back:active{transform:scale(.98)}
+
+@media(max-width:640px){.stats-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <a class="nav-logo" href="home.html">Skill<span>Bridge</span></a>
+    <span class="nav-badge">CICS · BatStateU</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="nav-email"></span>
+    <div class="notif-wrap">
+      <div class="notif-bell" onclick="toggleNotif('t-notif')" title="Notifications" id="t-bell">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot pulse" id="t-dot" style="display:none"></span>
+        <span class="notif-count" id="t-count"></span>
+      </div>
+      <div class="notif-dropdown" id="t-notif">
+        <div class="notif-header"><strong>🔔 Notifications</strong>
+          <span class="notif-clear" onclick="clearNotifs('t-notif-list','t-notif','t-dot','t-count')">Clear all</span></div>
+        <div class="notif-list" id="t-notif-list"><div class="notif-empty">No notifications yet.</div></div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="content-box">
+
+    <!-- ══ VIEW: APPLICATION FORM ══ -->
+    <div class="view active" id="view-form">
+      <button class="btn-back" onclick="window.location.href='home.html'">← Back to Home</button>
+      <div class="page-header">
+        <div class="page-title">Tutor Application</div>
+        <div class="page-sub">Tell us about your CICS expertise so we can match you with the right tutees.</div>
+      </div>
+
+      <!-- Personal Info -->
+      <div class="form-section">
+        <div class="fs-title"><div class="fs-icon">👤</div> Personal Information</div>
+        <div class="g2">
+          <div class="fg"><label class="lbl">Full Name</label><input class="inp" id="t-name" type="text" placeholder="Jane Doe" /></div>
+          <div class="fg"><label class="lbl">Student ID</label><input class="inp" id="t-id" type="text" placeholder="25-XXXXX" /></div>
+        </div>
+        <div class="g2" style="margin-top:13px">
+          <div class="fg"><label class="lbl">Program</label>
+            <select class="inp" id="t-program" onchange="loadSubjects()">
+              <option value="">Select Program…</option>
+              <option value="BSCS">BS Computer Science (BSCS)</option>
+              <option value="BSIT">BS Information Technology (BSIT)</option>
+            </select>
+          </div>
+          <div class="fg"><label class="lbl">Year Level</label>
+            <select class="inp" id="t-year">
+              <option value="">Select Year…</option>
+              <option>1st Year</option><option>2nd Year</option>
+              <option>3rd Year</option><option>4th Year</option>
+            </select>
+          </div>
+        </div>
+        <!-- Contact -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--primary-dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            <span>📞</span> Contact Information
+            <span style="font-size:.68rem;color:var(--muted);font-weight:400;font-family:'DM Sans',sans-serif;">(shown to matched tutees)</span>
+          </div>
+          <div class="g2">
+            <div class="fg">
+              <label class="lbl">Mobile Number</label>
+              <div class="phone-wrap">
+                <span class="phone-prefix">+63</span>
+                <input class="inp" id="t-phone" type="tel" placeholder="9XXXXXXXXX" maxlength="10"
+                  oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+              </div>
+            </div>
+            <div class="fg">
+              <label class="lbl">Personal Email</label>
+              <input class="inp" id="t-email" type="email" placeholder="yourname@gmail.com" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subjects -->
+      <div class="form-section">
+        <div class="fs-title"><div class="fs-icon">📚</div> Subjects You Can Teach</div>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px;">Select your program first — subjects are organized by year level.</p>
+        <div id="tutor-subjects-wrap"><span style="font-size:.8rem;color:var(--muted);font-style:italic;">Please select your program above.</span></div>
+      </div>
+
+      <!-- Proficiency -->
+      <div class="form-section">
+        <div class="fs-title"><div class="fs-icon">📊</div> Proficiency Level</div>
+        <div class="prof-labels"><span>Beginner</span><span>Intermediate</span><span>Advanced</span><span>Expert</span></div>
+        <input type="range" id="t-proficiency" min="1" max="10" value="7" oninput="document.getElementById('prof-val').textContent='Level '+this.value+' / 10'" />
+        <div style="text-align:center;font-size:.76rem;color:var(--primary);font-weight:600;margin-top:5px" id="prof-val">Level 7 / 10</div>
+      </div>
+
+      <!-- Availability -->
+      <div class="form-section">
+        <div class="fs-title"><div class="fs-icon">📅</div> Availability</div>
+        <div class="g2">
+          <div class="fg">
+            <label class="lbl">Available Days</label>
+            <div class="days-row" id="tutor-days">
+              <span class="day-btn" onclick="this.classList.toggle('sel')">Mon</span>
+              <span class="day-btn" onclick="this.classList.toggle('sel')">Tue</span>
+              <span class="day-btn" onclick="this.classList.toggle('sel')">Wed</span>
+              <span class="day-btn" onclick="this.classList.toggle('sel')">Thu</span>
+              <span class="day-btn" onclick="this.classList.toggle('sel')">Fri</span>
+              <span class="day-btn" onclick="this.classList.toggle('sel')">Sat</span>
+              <span class="day-btn" onclick="this.classList.toggle('sel')">Sun</span>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="lbl">Preferred Time Slot</label>
+            <div class="time-presets" id="t-time-presets">
+              <span class="time-preset" onclick="pickTime(this,'t')">🌅 Morning<br><small style="font-size:.65rem;opacity:.75">6AM–12PM</small></span>
+              <span class="time-preset" onclick="pickTime(this,'t')">☀️ Afternoon<br><small style="font-size:.65rem;opacity:.75">12PM–6PM</small></span>
+              <span class="time-preset" onclick="pickTime(this,'t')">🌙 Evening<br><small style="font-size:.65rem;opacity:.75">6PM–10PM</small></span>
+              <span class="time-preset" onclick="pickTime(this,'t')">🔄 Flexible</span>
+            </div>
+            <span class="custom-toggle" onclick="toggleCustom('t')">⏱ Set custom time range</span>
+            <div class="custom-time-row" id="t-custom-time">
+              <label>From</label><input type="time" id="t-from" value="08:00" />
+              <label>To</label><input type="time" id="t-to" value="17:00" />
+            </div>
+          </div>
+        </div>
+        <div class="g2" style="margin-top:14px">
+          <div class="fg"><label class="lbl">Session Mode</label>
+            <select class="inp" id="t-mode">
+              <option>Online (Google Meet / Teams)</option>
+              <option>In-Person (CICS Building)</option>
+              <option>Both</option>
+            </select>
+          </div>
+          <div class="fg"><label class="lbl">Max Tutees per Week</label>
+            <select class="inp" id="t-max">
+              <option>1 tutee</option><option>2 tutees</option>
+              <option>3 tutees</option><option>5+ tutees</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div class="form-section">
+        <div class="fs-title"><div class="fs-icon">✏️</div> Introduction & Teaching Style</div>
+        <textarea class="inp" id="t-bio" placeholder="Briefly introduce yourself and describe your approach to tutoring. What makes your sessions effective?"></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:center;padding-bottom:16px;">
+        <button class="btn-primary" onclick="submitApp()">Submit Application ✦</button>
+      </div>
+    </div><!-- end view-form -->
+
+    <!-- ══ VIEW: DASHBOARD ══ -->
+    <div class="view" id="view-dashboard">
+      <button class="btn-back" onclick="window.location.href='home.html'">← Back to Home</button>
+      <div class="page-header">
+        <div class="page-title" id="dash-greeting">Welcome, Tutor! 👋</div>
+        <div class="page-sub">Here's your tutoring dashboard for this week.</div>
+      </div>
+      <div class="info-row" id="dash-info-row"></div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-lbl">Session Requests</div></div>
+        <div class="stat-card"><div class="stat-val">4.9 ⭐</div><div class="stat-lbl">Avg. Rating</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-lbl">Active Tutees</div></div>
+        <div class="stat-card"><div class="stat-val">8h</div><div class="stat-lbl">Hours This Week</div></div>
+      </div>
+      <div class="sec-heading">📬 Incoming Session Requests</div>
+      <div class="session-list" id="session-list"></div>
+
+      <div style="text-align:center;margin-top:28px">
+        <button class="btn-primary" onclick="showForm()" style="margin:0 auto">Edit My Profile ✏️</button>
+      </div>
+    </div><!-- end view-dashboard -->
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="shared.js"></script>
+<script>
+const email = requireAuth();
+if (email) document.getElementById('nav-email').textContent = email;
+
+// If tutor already applied this session, show dashboard
+if (sessionStorage.getItem('sb_tutor_applied')) showDashboard(JSON.parse(sessionStorage.getItem('sb_tutor_data')));
+
+function loadSubjects() {
+  const p = document.getElementById('t-program').value;
+  if (!p) return;
+  buildYearChips('tutor-subjects-wrap', p === 'BSCS' ? BSCS : BSIT);
+}
+
+function submitApp() {
+  const name    = document.getElementById('t-name').value.trim();
+  const prog    = document.getElementById('t-program').value;
+  const year    = document.getElementById('t-year').value;
+  const phone   = document.getElementById('t-phone').value.trim();
+  const mail    = document.getElementById('t-email').value.trim();
+  const subjects= getSelChips('tutor-subjects-wrap');
+  const days    = getSelDays('tutor-days');
+  if (!name)              { showToast('Please enter your full name.'); return; }
+  if (!prog)              { showToast('Please select your program.'); return; }
+  if (!year)              { showToast('Please select your year level.'); return; }
+  if (!phone || phone.length < 10) { showToast('Please enter a valid 10-digit mobile number.'); return; }
+  if (!mail || !mail.includes('@')) { showToast('Please enter a valid personal email.'); return; }
+  if (!subjects.length)   { showToast('Please select at least one subject.'); return; }
+  if (!days.length)       { showToast('Please select at least one available day.'); return; }
+
+  const data = { name, prog, year, phone, mail, subjects, days, time: getTimeStr('t'), mode: document.getElementById('t-mode').value };
+  sessionStorage.setItem('sb_tutor_applied', '1');
+  sessionStorage.setItem('sb_tutor_data', JSON.stringify(data));
+  showDashboard(data);
+  showToast('Application submitted! Welcome to SkillBridge ✓');
+}
+
+function showDashboard(data) {
+  document.getElementById('view-form').classList.remove('active');
+  document.getElementById('view-dashboard').classList.add('active');
+  document.getElementById('dash-greeting').textContent = `Welcome, ${data.name.split(' ')[0]}! 👋`;
+  document.getElementById('dash-info-row').innerHTML = `
+    <span class="info-pill">Program: <strong>${data.prog}</strong></span>
+    <span class="info-pill">Year: <strong>${data.year}</strong></span>
+    <span class="info-pill">Subjects: <strong>${data.subjects.length} listed</strong></span>
+    <span class="info-pill">Days: <strong>${data.days.join(', ')}</strong></span>`;
+
+  // Pre-load dashboard notifications
+  document.getElementById('t-dot').style.display = 'block';
+  document.getElementById('t-count').textContent = '3';
+  document.getElementById('t-count').classList.add('show');
+  document.getElementById('t-notif-list').innerHTML = [
+    { cls: 'ni-blue', icon: '📩', title: 'New Session Request', msg: 'Maria Cruz requested Data Structures (CC 103) on Wed at 3PM.', time: '2 min ago' },
+    { cls: 'ni-blue', icon: '📩', title: 'New Session Request', msg: 'Liam Torres needs help with OOP 101 on Fri at 10AM.', time: '15 min ago' },
+    { cls: 'ni-warn', icon: '⭐', title: 'Rating Received', msg: 'Sofia Bautista rated your session 5 stars!', time: '1 hr ago' },
+  ].map(n => `<div class="notif-item unread"><div class="ni-icon ${n.cls}">${n.icon}</div>
+    <div class="ni-txt"><h4>${n.title}</h4><p>${n.msg}</p><time>${n.time}</time></div></div>`).join('');
+
+  buildSessionList();
+}
+
+function showForm() {
+  document.getElementById('view-dashboard').classList.remove('active');
+  document.getElementById('view-form').classList.add('active');
+}
+
+function buildSessionList() {
+  const reqs = [
+    { tutee: 'Maria Cruz',    prog: 'BSCS', subj: 'Data Structures & Algorithms (CC 103)', day: 'Wednesday', time: '3:00 PM', status: 'pending' },
+    { tutee: 'Liam Torres',   prog: 'BSIT', subj: 'Object-Oriented Programming (OOP 101)',  day: 'Friday',    time: '10:00 AM', status: 'pending' },
+    { tutee: 'Sofia Bautista',prog: 'BSCS', subj: 'Discrete Mathematics (CpE 405)',         day: 'Monday',    time: '5:00 PM', status: 'confirmed' },
+  ];
+  document.getElementById('session-list').innerHTML = reqs.map((r, i) => `
+    <div class="session-card" id="req-${i}">
+      <div class="session-info">
+        <h3>${r.tutee} <span style="font-size:.7rem;color:var(--muted);font-weight:400">(${r.prog})</span></h3>
+        <p>📚 ${r.subj} &nbsp;·&nbsp; 📅 ${r.day} at ${r.time}</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+        <span class="badge ${r.status === 'confirmed' ? 'badge-confirmed' : 'badge-pending'}" id="badge-${i}">
+          ${r.status === 'confirmed' ? '✓ Confirmed' : '⏳ Pending'}
+        </span>
+        ${r.status === 'pending' ? `<div class="sa">
+          <button class="btn-sm btn-acc" onclick="acceptReq(${i})">Accept</button>
+          <button class="btn-sm btn-dec" onclick="declineReq(${i})">Decline</button>
+        </div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function acceptReq(i) {
+  document.getElementById(`badge-${i}`).className = 'badge badge-confirmed';
+  document.getElementById(`badge-${i}`).textContent = '✓ Confirmed';
+  const sa = document.getElementById(`req-${i}`).querySelector('.sa');
+  if (sa) sa.remove();
+  pushNotif('t-notif-list', 't-dot', 't-count', 'ni-green', '✅', 'Session Accepted!', 'You accepted a session request. The tutee has been notified.');
+  showToast('Session confirmed! Tutee will be notified ✓');
+}
+function declineReq(i) {
+  document.getElementById(`req-${i}`).remove();
+  pushNotif('t-notif-list', 't-dot', 't-count', 'ni-warn', '❌', 'Request Declined', 'A session request was declined.');
+  showToast('Request declined.');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillBridge – Login | BatStateU CICS</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+
+body{
+  background:linear-gradient(145deg,#0A1628 0%,#122060 50%,#0A1E55 100%);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;overflow:hidden;position:relative;
+}
+body::before{content:'';position:absolute;width:700px;height:700px;
+  background:radial-gradient(circle,rgba(56,189,248,.1) 0%,transparent 70%);
+  top:-150px;right:-150px;pointer-events:none}
+body::after{content:'';position:absolute;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(26,86,219,.18) 0%,transparent 70%);
+  bottom:-100px;left:-100px;pointer-events:none}
+
+.login-card{
+  background:rgba(255,255,255,.055);backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.1);border-radius:24px;
+  padding:52px 48px;width:100%;max-width:880px;
+  display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;
+  animation:fadeUp .5s ease both;position:relative;z-index:1;margin:20px;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+.brand-kicker{font-size:.68rem;color:#7DA4D8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.brand-title{font-family:'Syne',sans-serif;font-weight:800;font-size:2.7rem;color:#fff;letter-spacing:-.03em;line-height:1}
+.brand-title span{color:var(--accent2)}
+.brand-school{margin-top:8px;font-size:.7rem;color:#7DA4D8;letter-spacing:.06em;font-weight:500;text-transform:uppercase}
+.brand-desc{margin-top:14px;color:#9BB8E0;font-size:.85rem;line-height:1.7;font-weight:300; text-align: justify;}
+.brand-tags{margin-top:20px;display:flex;flex-wrap:wrap;gap:7px}
+.ltag{background:rgba(255,255,255,.08);color:#C5D8F5;border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:5px 13px;font-size:.7rem;font-weight:500}
+.ltag.blue{background:rgba(14,165,233,.18);border-color:rgba(14,165,233,.28);color:var(--accent2)}
+
+.login-form{display:flex;flex-direction:column;gap:14px}
+.fl{font-size:.7rem;font-weight:600;color:#9BB8E0;margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.07em}
+.fi{width:100%;border:1.5px solid rgba(255,255,255,.14);border-radius:10px;padding:13px 15px;
+    font-family:'DM Sans',sans-serif;font-size:.9rem;background:rgba(255,255,255,.06);
+    color:#fff;outline:none;transition:all .2s}
+.fi::placeholder{color:rgba(255,255,255,.28)}
+.fi:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(56,189,248,.14)}
+
+.btn-login{width:100%;background:var(--primary);color:#fff;border:none;border-radius:10px;
+           padding:14px;font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;
+           cursor:pointer;margin-top:4px;transition:all .2s;box-shadow:0 4px 20px rgba(26,86,219,.4)}
+.btn-login:hover{background:var(--accent);box-shadow:0 6px 28px rgba(14,165,233,.45)}
+.login-note{text-align:center;font-size:.7rem;color:#7DA4D8;margin-top:2px}
+.err{color:#FCA5A5;font-size:.78rem;text-align:center;display:none;margin-top:-4px}
+.err.show{display:block}
+
+@media(max-width:640px){.login-card{grid-template-columns:1fr;padding:34px 22px}}
+</style>
+</head>
+<body>
+<div class="login-card">
+  <!-- LEFT BRAND -->
+  <div>
+    <div class="brand-kicker">BatStateU · CICS Alangilan</div>
+    <h1 class="brand-title">Skill<span>Bridge</span></h1>
+    <div class="brand-school">College of Informatics and Computing Sciences</div>
+    <p class="brand-desc">A dynamic peer-tutoring and academic matchmaking platform exclusively for CICS students — connecting you with qualified peer tutors based on your curriculum, availability, and subject proficiency.</p>
+    <div class="brand-tags">
+      <span class="ltag blue">🧑‍💻BSCS</span>
+      <span class="ltag blue">🖥️BSIT</span>
+      <span class="ltag">Smart Matching</span>
+      <span class="ltag">Peer-to-Peer</span>
+    </div>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="login-form">
+    <div>
+      <label class="fl">G-Suite Email Address</label>
+      <input class="fi" id="login-email" type="email" placeholder="xx-xxxxx@g.batstate-u.edu.ph" />
+    </div>
+    <div>
+      <label class="fl">Password</label>
+      <input class="fi" id="login-pw" type="password" placeholder="••••••••" />
+    </div>
+    <p class="err" id="err-msg">Please enter a valid email and password.</p>
+    <button class="btn-login" onclick="doLogin()">Log In to SkillBridge →</button>
+    <p class="login-note">Exclusively for CICS students of BatStateU Alangilan</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="shared.js"></script>
+<script>
+// If already logged in, redirect to home
+if (localStorage.getItem('sb_email')) window.location.href = 'home.html';
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const err   = document.getElementById('err-msg');
+  if (!email || !email.includes('@') || !pw) {
+    err.classList.add('show');
+    return;
+  }
+  err.classList.remove('show');
+  localStorage.setItem('sb_email', email);
+  window.location.href = 'home.html';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
